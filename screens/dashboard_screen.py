@@ -2,18 +2,13 @@
 import flet as ft
 
 class DashboardScreen(ft.Container):
-    def __init__(self, on_join_class, on_open_meeting_hub, on_open_assignments):
-        """
-        Initialize the main Dashboard interface.
-        :param on_join_class: Function to route directly to a classroom.
-        :param on_open_meeting_hub: Function to route to the Meeting Management screen.
-        :param on_open_assignments: Function to route to the Assignment management screen.
-        """
+    def __init__(self, on_join_class, on_open_meeting_hub, on_open_assignments, on_open_quizzes, on_open_settings): # NEW PARAMETER
         super().__init__()
         self.on_join_class = on_join_class
         self.on_open_meeting_hub = on_open_meeting_hub
-        self.on_open_assignments = on_open_assignments  # FIXED: Now explicitly stored
-        
+        self.on_open_assignments = on_open_assignments
+        self.on_open_quizzes = on_open_quizzes
+        self.on_open_settings = on_open_settings # STORE IT
         self.expand = True
         self.bgcolor = ft.Colors.SURFACE
         
@@ -37,6 +32,9 @@ class DashboardScreen(ft.Container):
                 ft.NavigationRailDestination(
                     icon=ft.Icons.QUIZ_OUTLINED, selected_icon=ft.Icons.QUIZ, label="Quizzes"
                 ),
+                ft.NavigationRailDestination(
+                 icon=ft.Icons.SETTINGS_OUTLINED, selected_icon=ft.Icons.SETTINGS, label="Settings"
+             ),
             ],
             on_change=self.handle_nav_change,
         )
@@ -126,9 +124,13 @@ class DashboardScreen(ft.Container):
         )
 
     def handle_nav_change(self, e):
-        """Handles clicks on the sidebar navigation rail."""
-        index = e.control.selected_index
-        if index == 1:    # Classroom Icon
-            self.on_open_meeting_hub()
-        elif index == 2:  # Assignments Icon
-            self.on_open_assignments()  # FIXED: Routing execution now cleanly maps here
+     """Handles clicks on the sidebar navigation rail."""
+     index = e.control.selected_index
+     if index == 1:    # Classroom Icon
+         self.on_open_meeting_hub()
+     elif index == 2:  # Assignments Icon
+         self.on_open_assignments()
+     elif index == 3:  # Quizzes Icon
+         self.on_open_quizzes()
+     elif index == 4:  # Settings Icon (NEW ENTRY)
+         self.on_open_settings()

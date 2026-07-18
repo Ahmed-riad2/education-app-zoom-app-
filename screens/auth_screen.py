@@ -1,110 +1,135 @@
 # screens/auth_screen.py
 import flet as ft
+from services.auth_service import AuthService
 
 class AuthScreen(ft.Container):
     def __init__(self, on_auth_success):
         """
-        Initialize the Authentication Screen (Login/Signup).
-        :param on_auth_success: Function to call when login is successful.
+        Initialize the Authentication Screen.
+        :param on_auth_success: Function to route to the main dashboard upon successful login.
         """
         super().__init__()
         self.on_auth_success = on_auth_success
         self.expand = True
-        self.alignment = ft.Alignment.CENTER
         self.bgcolor = ft.Colors.SURFACE
-
-        # State variable to track if we are in "Login" or "Signup" mode
-        self.is_login = True
-
-        # --- UI Components ---
-        self.title = ft.Text("Welcome Back", size=32, weight=ft.FontWeight.BOLD, color=ft.Colors.BLUE_400)
-        self.subtitle = ft.Text("Login to continue your learning journey.", color=ft.Colors.OUTLINE)
-
-        # Input Fields
-        self.name_field = ft.TextField(label="Full Name", prefix_icon=ft.Icons.PERSON, visible=False)
-        self.email_field = ft.TextField(label="Email", prefix_icon=ft.Icons.EMAIL)
-        self.password_field = ft.TextField(
-            label="Password", 
-            prefix_icon=ft.Icons.LOCK, 
-            password=True, 
-            can_reveal_password=True
-        )
         
-        # Extras
+        # FIXED: Using ft.Alignment(0, 0) instead of the deprecated ft.alignment.center constant
+        self.alignment = ft.Alignment(0, 0)
+
+        # --- Inputs (Bound to 'self' so the backend can read them) ---
+        self.email_input = ft.TextField(
+            label="Email",
+            prefix_icon=ft.Icons.EMAIL_OUTLINED,
+            border_radius=8,
+            width=350,
+            autofocus=True
+        )
+
+        self.password_input = ft.TextField(
+            label="Password",
+            password=True,
+            can_reveal_password=True,
+            prefix_icon=ft.Icons.LOCK_OUTLINE,
+            border_radius=8,
+            width=350,
+            on_submit=self.handle_submit # Allows hitting 'Enter' to login
+        )
+
         self.remember_me = ft.Checkbox(label="Remember Me", value=False)
-        self.forgot_password = ft.TextButton(content="Forgot Password?") 
-        
-        # Main Action Button
-        self.submit_btn = ft.ElevatedButton(
-            content="Login", 
-            width=300, 
-            bgcolor=ft.Colors.BLUE_600, 
-            color=ft.Colors.WHITE,
-            on_click=self.handle_submit
-        )
 
-        # Toggle Action (Switch between Login and Signup)
-        self.toggle_btn = ft.TextButton(
-            content="Don't have an account? Sign up here.",
-            on_click=self.toggle_mode
-        )
-
-        # Assemble the UI inside a Card for a clean, floating look
+        # --- UI Assembly ---
         self.content = ft.Card(
-            elevation=10,
-            # FIXED: Removed color=ft.Colors.SURFACE_VARIANT. 
-            # The Card will now automatically theme itself based on elevation.
+            elevation=8,
             content=ft.Container(
                 padding=40,
-                width=400,
+                width=450,
                 content=ft.Column(
-                    controls=[
-                        self.title,
-                        self.subtitle,
-                        ft.Divider(height=20, color=ft.Colors.TRANSPARENT), # Spacer
-                        self.name_field,
-                        self.email_field,
-                        self.password_field,
-                        ft.Row([self.remember_me, self.forgot_password], alignment=ft.MainAxisAlignment.SPACE_BETWEEN),
-                        ft.Container(height=10),
-                        self.submit_btn,
-                        self.toggle_btn
-                    ],
                     horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                    spacing=20,
+                    controls=[
+                        ft.Icon(ft.Icons.SCHOOL, size=60, color=ft.Colors.BLUE_500),
+                        ft.Text("EduVerse AI", size=32, weight=ft.FontWeight.BOLD),
+                        ft.Text("Sign in to your account", color=ft.Colors.OUTLINE),
+                        ft.Divider(height=20, color=ft.Colors.TRANSPARENT),
+                        
+                        # Add the bound inputs to the UI
+                        self.email_input,
+                        self.password_input,
+                        
+                        ft.Row(
+                            alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+                            controls=[
+                                self.remember_me,
+                                ft.TextButton(
+                                    content=ft.Text("Forgot Password?"), 
+                                    on_click=self.handle_forgot_password
+                                )
+                            ]
+                        ),
+                        ft.Divider(height=10, color=ft.Colors.TRANSPARENT),
+                        ft.ElevatedButton(
+                            content=ft.Text("Login"),
+                            width=350,
+                            height=45,
+                            bgcolor=ft.Colors.BLUE_600,
+                            color=ft.Colors.WHITE,
+                            on_click=self.handle_submit
+                        )
+                    ]
                 )
             )
         )
 
-    def toggle_mode(self, e):
-        """Switches the UI between Login and Signup modes."""
-        self.is_login = not self.is_login
-        
-        if self.is_login:
-            self.title.value = "Welcome Back"
-            self.subtitle.value = "Login to continue your learning journey."
-            self.name_field.visible = False
-            self.remember_me.visible = True
-            self.forgot_password.visible = True
-            self.submit_btn.content = "Login"
-            self.toggle_btn.content = "Don't have an account? Sign up here."
+    def handle_forgot_password(self, e):
+        """Mock functionality for password reset."""
+        email = self.email_input.value.strip() if self.email_input.value else ""
+        if not email:
+            self.page.snack_bar = ft.SnackBar(
+                content=ft.Text("Please enter your email to reset the password."),
+                bgcolor=ft.Colors.ORANGE_600
+            )
         else:
-            self.title.value = "Join EduVerse"
-            self.subtitle.value = "Create an account to start learning."
-            self.name_field.visible = True
-            self.remember_me.visible = False
-            self.forgot_password.visible = False
-            self.submit_btn.content = "Sign Up"
-            self.toggle_btn.content = "Already have an account? Login here."
-            
-        self.update()
+            self.page.snack_bar = ft.SnackBar(
+                content=ft.Text(f"Password reset link sent to {email}."),
+                bgcolor=ft.Colors.GREEN_600
+            )
+        
+        self.page.snack_bar.open = True
+        self.page.update()
 
     def handle_submit(self, e):
-        """Handle the login/signup logic (Mocked for now)."""
-        if not self.email_field.value or not self.password_field.value:
-            self.page.snack_bar = ft.SnackBar(ft.Text("Please fill in all fields!"), bgcolor=ft.Colors.RED_500)
+        """Processes authentication via SQLite backend."""
+        email = self.email_input.value.strip() if self.email_input.value else ""
+        password = self.password_input.value.strip() if self.password_input.value else ""
+
+        if not email or not password:
+            self.page.snack_bar = ft.SnackBar(
+                content=ft.Text("Please enter both email and password."),
+                bgcolor=ft.Colors.RED_600
+            )
             self.page.snack_bar.open = True
             self.page.update()
             return
+
+        # Backend Verification
+        user_data = AuthService.authenticate_user(email, password)
+
+        if user_data:
+            # FIXED: Bypass Flet's volatile storage API and use a native Python dictionary
+            if not hasattr(self.page, 'session_data'):
+                self.page.session_data = {}
+                
+            self.page.session_data["user_id"] = user_data["id"]
+            self.page.session_data["user_name"] = user_data["name"]
+            self.page.session_data["user_email"] = user_data["email"]
+            self.page.session_data["user_role"] = user_data["role"]
             
-        # Proceed to next screen
-        self.on_auth_success()
+            # Navigate to Dashboard
+            self.on_auth_success()
+        else:
+            self.page.snack_bar = ft.SnackBar(
+                content=ft.Text("Invalid credentials. Please try again."),
+                bgcolor=ft.Colors.RED_600
+            )
+            self.page.snack_bar.open = True
+            self.page.update()

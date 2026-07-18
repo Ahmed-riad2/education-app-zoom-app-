@@ -6,7 +6,11 @@ from screens.dashboard_screen import DashboardScreen
 from screens.classroom_screen import ClassroomScreen
 from screens.ai_summary_screen import AISummaryScreen # NEW IMPORT
 from screens.assignment_screen import AssignmentScreen # NEW IMPORT
+from screens.quiz_screen import QuizScreen
+from screens.settings_screen import SettingsScreen
+from database.db_manager import init_db
 class EduVerseApp:
+
     def __init__(self, page: ft.Page):
         self.page = page
         self.page.title = "EduVerse AI"
@@ -35,14 +39,21 @@ class EduVerseApp:
 
     def show_dashboard(self):
         self.page.controls.clear()
-        
-        # Pass the newly appended route hook straight down into the constructor
         dashboard = DashboardScreen(
             on_join_class=self.show_classroom,
             on_open_meeting_hub=self.show_meeting_hub,
-            on_open_assignments=self.show_assignments
+            on_open_assignments=self.show_assignments,
+            on_open_quizzes=self.show_quizzes, # NEW
+            on_open_settings=self.show_settings  # NEW
         )
         self.page.add(dashboard)
+        self.page.update()  
+
+
+    def show_quizzes(self):
+        self.page.controls.clear()
+        quiz_panel = QuizScreen(on_back_to_dashboard=self.show_dashboard)
+        self.page.add(quiz_panel)
         self.page.update()
 
     def show_assignments(self):
@@ -76,7 +87,16 @@ class EduVerseApp:
         self.page.add(summary)
         self.page.update()
 
+    def show_settings(self):
+     """Clear the page and route to the System Settings screen."""
+     self.page.controls.clear()
+     settings_panel = SettingsScreen(on_back_to_dashboard=self.show_dashboard)
+     self.page.add(settings_panel)
+     self.page.update()        
+    
 def main(page: ft.Page):
+    """Entry point of the Flet application."""
+    init_db() # Initializes SQLite on startup
     app = EduVerseApp(page)
 
 if __name__ == "__main__":
